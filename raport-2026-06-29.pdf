@@ -1,0 +1,105 @@
+# TreidingSB — Sistem de rapoarte zilnice automate
+
+Acest folder contine tot ce ai nevoie ca rapoartele zilnice SMC sa se genereze
+automat in fiecare dimineata si sa apara pe site la pagina "Rapoarte".
+
+## Ce face sistemul
+
+In fiecare zi, la ora 07:00 UTC, un robot (GitHub Actions):
+1. Apeleaza API-ul Claude pentru a genera analiza SMC pentru XAU/USD, XAG/USD, EUR/USD, GBP/USD
+2. Construieste un PDF profesional cu analiza
+3. Salveaza PDF-ul in folderul `reports/`
+4. Actualizeaza `reports/index.json` cu lista rapoartelor
+
+Site-ul TreidingSB citeste automat `reports/index.json` si afiseaza lista
+rapoartelor in pagina "Rapoarte", cu buton de descarcare pentru fiecare.
+
+## Pasii de configurare (o singura data)
+
+### Pasul 1 — Creeaza un repository GitHub
+
+1. Mergi pe **github.com** si creeaza cont (daca nu ai deja)
+2. Apasa **New repository** → numeste-l de exemplu `treidingsb-reports`
+3. Alege **Public** sau **Private** (Private e mai sigur pentru cheia API)
+4. Apasa **Create repository**
+
+### Pasul 2 — Incarca acest folder in repository
+
+Cea mai simpla metoda — prin interfata web GitHub:
+1. In repository-ul nou creat, apasa **uploading an existing file**
+2. Trage TOATE fisierele si folderele din acest pachet (`.github/`, `scripts/`, `reports/`)
+3. Apasa **Commit changes**
+
+**Important**: structura de foldere trebuie pastrata exact:
+```
+.github/workflows/daily-report.yml
+scripts/generate_report.py
+scripts/requirements.txt
+reports/index.json
+reports/raport-2026-06-30.pdf
+```
+
+### Pasul 3 — Adauga cheia API ca Secret
+
+Aceasta este cea mai importanta parte — cheia ta API Claude NU trebuie pusa
+direct in cod, ci ca "secret" criptat in GitHub:
+
+1. In repository, mergi la **Settings** (tab-ul de sus)
+2. In meniul din stanga: **Secrets and variables → Actions**
+3. Apasa **New repository secret**
+4. Nume: `ANTHROPIC_API_KEY`
+5. Valoare: cheia ta API de pe console.anthropic.com (incepe cu `sk-ant-...`)
+6. Apasa **Add secret**
+
+### Pasul 4 — Testeaza manual prima rulare
+
+1. Mergi la tab-ul **Actions** din repository
+2. Selecteaza workflow-ul **"Raport zilnic TreidingSB"** din stanga
+3. Apasa butonul **Run workflow** (dreapta) → **Run workflow**
+4. Asteapta 1-2 minute, apoi verifica daca a aparut un commit nou cu PDF-ul generat
+
+Daca apare eroare, verifica mesajul din log — cel mai probabil cheia API
+nu e corecta sau nu are credit disponibil.
+
+### Pasul 5 — Conecteaza rapoartele cu site-ul live
+
+Site-ul tau (pe Cloudflare Pages) trebuie sa aiba si el folderul `reports/`
+pentru ca butonul de descarcare sa functioneze. Doua optiuni:
+
+**Optiunea A (recomandata) — Cloudflare Pages conectat la GitHub:**
+In loc sa incarci manual fisierul `index.html`, conecteaza Cloudflare Pages
+direct la acest repository GitHub. Astfel, de fiecare data cand robotul
+adauga un raport nou, site-ul se actualizeaza automat, fara sa mai faci
+upload manual.
+
+**Optiunea B (manuala) — copiezi folderul reports/ manual:**
+Dupa fiecare rulare a robotului, descarci folderul `reports/` actualizat
+din GitHub si il pui langa `index.html` inainte de fiecare upload pe
+Cloudflare Pages.
+
+## Cum schimb ora de generare
+
+In fisierul `.github/workflows/daily-report.yml`, linia:
+```yaml
+- cron: '0 7 * * *'
+```
+`0 7` inseamna minutul 0, ora 7 UTC. Pentru ora 8 dimineata Londra vara
+(BST = UTC+1), foloseste `0 7 * * *`. Pentru iarna (GMT = UTC+0), foloseste
+`0 8 * * *`. Site-ul cron.help iti arata vizual orice expresie cron.
+
+## Costuri estimate
+
+- **GitHub Actions**: gratuit (2000 minute/luna incluse, raportul foloseste ~2 minute/zi)
+- **API Claude**: ~4 apeluri/zi (cate unul per instrument), cost estimat
+  similar cu sistemul vechi (~5-8 lire/luna in functie de model si volum)
+- **Cloudflare Pages**: gratuit
+
+## Structura fisierelor
+
+```
+.github/workflows/daily-report.yml   — configurarea automatizarii (cand si cum ruleaza)
+scripts/generate_report.py            — scriptul principal (genereaza analiza + PDF)
+scripts/requirements.txt              — librariile Python necesare
+reports/index.json                    — lista rapoartelor (citita de site)
+reports/raport-YYYY-MM-DD.pdf         — fiecare raport zilnic generat
+```
