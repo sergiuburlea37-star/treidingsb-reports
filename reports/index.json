@@ -1,6 +1,29 @@
 {
   "rapoarte": [
     {
+      "data": "2026-07-03",
+      "data_afisare": "03 Iulie 2026 — RAPORT SPECIAL NFP",
+      "data_urmatoare": "06 Iulie 2026",
+      "saptamana": 27,
+      "quarter": "Q2",
+      "year": 2026,
+      "fisier": "Q2_2026/raport-special-nfp-2026-07-03.pdf",
+      "instrumente": [
+        "XAU/USD"
+      ],
+      "preturi": {
+        "EURUSD": "1.14398",
+        "GBPUSD": "1.33556",
+        "XAUUSD": "4,175.70",
+        "XAGUSD": "62.403",
+        "DXY": "100.84",
+        "FED": "3.75%",
+        "BCE": "2.40%",
+        "BOE": "3.75%",
+        "US10Y": "4.485%"
+      }
+    },
+    {
       "data": "2026-06-29",
       "data_afisare": "29 Iunie 2026",
       "data_urmatoare": "06 Iulie 2026",
