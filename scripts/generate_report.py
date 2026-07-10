@@ -91,6 +91,10 @@ def data_localizata(d, lang):
 OUTPUT_DIR = Path(__file__).parent.parent / "reports" / f"{QUARTER}_{QUARTER_YEAR}"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
+# Logo afisat in coltul dreapta-sus pe fiecare pagina din PDF
+LOGO_PATH = Path(__file__).parent.parent / "assets" / "logo.png"
+PAGE_WIDTH, PAGE_HEIGHT = A4
+
 C_AURIU = HexColor("#F5A623")
 C_NAVY  = HexColor("#0D1B33")
 C_BLUE  = HexColor("#2563EB")
@@ -104,7 +108,7 @@ C_BG    = HexColor("#F8FAFC")
 # ===================== Etichete statice per limba (fara apel API) =====================
 LABELS = {
     "ro": {
-        "title": "TreidingSB — Raport Saptamanal", "week_word": "Saptamana", "valid_word": "Valabil",
+        "title": "Treiding Satellite Broadcast — Raport Saptamanal", "week_word": "Saptamana", "valid_word": "Valabil",
         "note_label": "Nota", "note_body": "Raportul din {date} ramane activ. Urmatoarea actualizare: <b>{next_date}</b>.",
         "important_label": "Important", "important_body": "Acest raport se va modifica in functie de noutatile economice si fundamentale aparute in cursul saptamanii. Acesti factori sunt cei care misca activele in acest moment.",
         "preturi_ref": "PRETURI DE REFERINTA", "col_instrument": "Instrument", "col_pret": "Pret", "col_variatie": "Variatie",
@@ -122,7 +126,7 @@ LABELS = {
         "generat": "Generat",
     },
     "en": {
-        "title": "TreidingSB — Weekly Report", "week_word": "Week", "valid_word": "Valid",
+        "title": "Treiding Satellite Broadcast — Weekly Report", "week_word": "Week", "valid_word": "Valid",
         "note_label": "Note", "note_body": "The report from {date} remains active. Next update: <b>{next_date}</b>.",
         "important_label": "Important", "important_body": "This report will be updated based on economic and fundamental news released during the week. These are the factors currently moving the assets.",
         "preturi_ref": "REFERENCE PRICES", "col_instrument": "Instrument", "col_pret": "Price", "col_variatie": "Change",
@@ -140,7 +144,7 @@ LABELS = {
         "generat": "Generated",
     },
     "ru": {
-        "title": "TreidingSB — Еженедельный отчёт", "week_word": "Неделя", "valid_word": "Действует",
+        "title": "Treiding Satellite Broadcast — Еженедельный отчёт", "week_word": "Неделя", "valid_word": "Действует",
         "note_label": "Примечание", "note_body": "Отчёт от {date} остаётся в силе. Следующее обновление: <b>{next_date}</b>.",
         "important_label": "Важно", "important_body": "Этот отчёт будет обновляться с учётом экономических и фундаментальных новостей в течение недели. Именно эти факторы сейчас двигают активы.",
         "preturi_ref": "СПРАВОЧНЫЕ ЦЕНЫ", "col_instrument": "Инструмент", "col_pret": "Цена", "col_variatie": "Изменение",
@@ -158,7 +162,7 @@ LABELS = {
         "generat": "Создано",
     },
     "uk": {
-        "title": "TreidingSB — Щотижневий звіт", "week_word": "Тиждень", "valid_word": "Дійсний",
+        "title": "Treiding Satellite Broadcast — Щотижневий звіт", "week_word": "Тиждень", "valid_word": "Дійсний",
         "note_label": "Примітка", "note_body": "Звіт від {date} залишається чинним. Наступне оновлення: <b>{next_date}</b>.",
         "important_label": "Важливо", "important_body": "Цей звіт буде оновлюватися з урахуванням економічних і фундаментальних новин протягом тижня. Саме ці фактори зараз рухають активи.",
         "preturi_ref": "ДОВІДКОВІ ЦІНИ", "col_instrument": "Інструмент", "col_pret": "Ціна", "col_variatie": "Зміна",
@@ -176,7 +180,7 @@ LABELS = {
         "generat": "Створено",
     },
     "pl": {
-        "title": "TreidingSB — Raport tygodniowy", "week_word": "Tydzień", "valid_word": "Ważny",
+        "title": "Treiding Satellite Broadcast — Raport tygodniowy", "week_word": "Tydzień", "valid_word": "Ważny",
         "note_label": "Uwaga", "note_body": "Raport z {date} pozostaje aktywny. Następna aktualizacja: <b>{next_date}</b>.",
         "important_label": "Ważne", "important_body": "Ten raport będzie aktualizowany na podstawie wiadomości ekonomicznych i fundamentalnych publikowanych w ciągu tygodnia. To właśnie te czynniki obecnie poruszają aktywami.",
         "preturi_ref": "CENY REFERENCYJNE", "col_instrument": "Instrument", "col_pret": "Cena", "col_variatie": "Zmiana",
@@ -341,6 +345,18 @@ JSON de tradus:
         t_smc[sim] = entry.get("smc", a_smc.get(sim, {}))
     return t_ctx, t_cal, t_factori, t_smc
 
+def draw_header(canvas, doc):
+    """Deseneaza logo-ul TSB in coltul dreapta-sus, pe fiecare pagina a PDF-ului."""
+    if not LOGO_PATH.exists():
+        return
+    logo_size = 13 * mm
+    x = PAGE_WIDTH - doc.rightMargin - logo_size
+    y = PAGE_HEIGHT - 12 * mm - logo_size
+    try:
+        canvas.drawImage(str(LOGO_PATH), x, y, width=logo_size, height=logo_size, preserveAspectRatio=True, mask="auto")
+    except Exception as e:
+        print(f"  Avertisment: nu am putut desena logo-ul: {e}")
+
 def nota_box(text, stil_text, bg, border_color, story):
     box = [[Paragraph(text, stil_text)]]
     t = Table(box, colWidths=[162*mm])
@@ -439,9 +455,9 @@ def construieste_pdf(lang, context_macro, calendar, analize_factori, analize_smc
     story.append(Spacer(1,8))
     story.append(HRFlowable(width="100%", thickness=1, color=C_NAVY, spaceAfter=8))
     story.append(Paragraph(f"<b>{L['disclaimer'].split('.')[0]}.</b> {'.'.join(L['disclaimer'].split('.')[1:]).strip()}", S["Disclaimer"]))
-    story.append(Paragraph(f"TreidingSB &middot; {QUARTER} {QUARTER_YEAR} &middot; {L['week_word']} {SAPTAMANA_NR} &middot; treidingsb.vercel.app &middot; {L['generat']}: {data_localizata(TODAY, lang)}", S["Footer"]))
+    story.append(Paragraph(f"Treiding Satellite Broadcast &middot; {QUARTER} {QUARTER_YEAR} &middot; {L['week_word']} {SAPTAMANA_NR} &middot; treidingsb.vercel.app &middot; {L['generat']}: {data_localizata(TODAY, lang)}", S["Footer"]))
 
-    doc.build(story)
+    doc.build(story, onFirstPage=draw_header, onLaterPages=draw_header)
     print(f"  PDF ({lang}): {output_path}")
     return output_path, report_file
 
