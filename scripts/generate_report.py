@@ -91,9 +91,12 @@ def data_localizata(d, lang):
 OUTPUT_DIR = Path(__file__).parent.parent / "reports" / f"{QUARTER}_{QUARTER_YEAR}"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Logo afisat in coltul dreapta-sus pe fiecare pagina din PDF
+# Logo afisat in coltul stanga-sus pe fiecare pagina din PDF, chiar langa
+# inceputul titlului "Treiding Satellite Broadcast..."
 LOGO_PATH = Path(__file__).parent.parent / "assets" / "logo.png"
 PAGE_WIDTH, PAGE_HEIGHT = A4
+LOGO_SIZE = 13 * mm
+LOGO_INDENT = 17 * mm  # spatiul rezervat titlului/subtitlului ca sa nu se suprapuna cu logo-ul
 
 C_AURIU = HexColor("#F5A623")
 C_NAVY  = HexColor("#0D1B33")
@@ -202,8 +205,8 @@ LABELS = {
 def stiluri():
     base = getSampleStyleSheet()
     return {
-        "TitluRaport": ParagraphStyle("TitluRaport", parent=base["Title"], fontName="Helvetica-Bold", fontSize=19, textColor=C_NAVY, spaceAfter=4, alignment=TA_LEFT),
-        "SubtitluRaport": ParagraphStyle("SubtitluRaport", parent=base["Normal"], fontName="Helvetica", fontSize=9.5, textColor=C_GRI, spaceAfter=14),
+        "TitluRaport": ParagraphStyle("TitluRaport", parent=base["Title"], fontName="Helvetica-Bold", fontSize=19, textColor=C_NAVY, spaceAfter=4, alignment=TA_LEFT, leftIndent=LOGO_INDENT),
+        "SubtitluRaport": ParagraphStyle("SubtitluRaport", parent=base["Normal"], fontName="Helvetica", fontSize=9.5, textColor=C_GRI, spaceAfter=14, leftIndent=LOGO_INDENT),
         "SectiuneMare": ParagraphStyle("SectiuneMare", parent=base["Heading1"], fontName="Helvetica-Bold", fontSize=12, textColor=C_NAVY, spaceBefore=6, spaceAfter=8, letterSpacing=0.6),
         "InstrumentTitlu": ParagraphStyle("InstrumentTitlu", parent=base["Heading1"], fontName="Helvetica-Bold", fontSize=14, textColor=C_NAVY, spaceBefore=4, spaceAfter=2),
         "InstrumentSub": ParagraphStyle("InstrumentSub", parent=base["Normal"], fontName="Helvetica-Oblique", fontSize=9, textColor=C_GRI, spaceAfter=8),
@@ -346,14 +349,14 @@ JSON de tradus:
     return t_ctx, t_cal, t_factori, t_smc
 
 def draw_header(canvas, doc):
-    """Deseneaza logo-ul TSB in coltul dreapta-sus, pe fiecare pagina a PDF-ului."""
+    """Deseneaza logo-ul TSB in coltul stanga-sus, pe fiecare pagina a PDF-ului,
+    chiar langa inceputul titlului."""
     if not LOGO_PATH.exists():
         return
-    logo_size = 13 * mm
-    x = PAGE_WIDTH - doc.rightMargin - logo_size
-    y = PAGE_HEIGHT - 12 * mm - logo_size
+    x = doc.leftMargin
+    y = PAGE_HEIGHT - 12 * mm - LOGO_SIZE
     try:
-        canvas.drawImage(str(LOGO_PATH), x, y, width=logo_size, height=logo_size, preserveAspectRatio=True, mask="auto")
+        canvas.drawImage(str(LOGO_PATH), x, y, width=LOGO_SIZE, height=LOGO_SIZE, preserveAspectRatio=True, mask="auto")
     except Exception as e:
         print(f"  Avertisment: nu am putut desena logo-ul: {e}")
 
