@@ -470,10 +470,47 @@ def actualizeaza_index(fisiere_per_limba):
             with open(path) as f: data = json.load(f)
         else:
             data = {key: []}
-        data[key] = [r for r in data[key] if r.get("data") != intrare["data"]]
-        data[key].insert(0, intrare)
-        data[key] = data[key][:52]
-        with open(path,"w",encoding="utf-8") as f:
+
+        existing = data.get(key, [])
+
+        # Backup automat: pastram intotdeauna ultima versiune valida a
+        # fisierului inainte de suprascriere, ca sa poata fi recuperata
+        # manual (fara git) daca ceva merge prost.
+        if path.exists():
+            backup_path = path.with_suffix(".backup.json")
+            try:
+                with open(backup_path, "w", encoding="utf-8") as bf:
+                    json.dump(data, bf, ensure_ascii=False, indent=2)
+            except Exception as e:
+                print(f"    Avertisment: nu am putut scrie backup-ul {backup_path}: {e}")
+
+        # Rapoartele speciale (ex. NFP) sunt marcate cu "special": true si nu
+        # sunt niciodata eliminate automat de aici -- nici macar daca data lor
+        # ar coincide cu data raportului saptamanal curent. Doar rapoartele
+        # normale, generate automat, pot fi inlocuite prin re-rulare pe
+        # aceeasi data (ex. re-rulare manuala a workflow-ului).
+        speciale = [r for r in existing if r.get("special")]
+        normale = [r for r in existing if not r.get("special")]
+        normale = [r for r in normale if r.get("data") != intrare["data"]]
+        normale.insert(0, intrare)
+        normale = normale[:52]
+
+        noua_lista = speciale + normale
+        noua_lista.sort(key=lambda r: r.get("data", ""), reverse=True)
+
+        # Plasa de siguranta: daca lista ar scadea neasteptat de mult fata de
+        # inainte (posibil bug sau fisier corupt), anulam scrierea si oprim
+        # scriptul cu eroare tare -- asta face job-ul din GitHub Actions sa
+        # esueze si sa trimita automat un email de notificare a esecului,
+        # in loc sa pierdem date silentios.
+        if existing and len(noua_lista) < len(existing) - 1:
+            raise RuntimeError(
+                f"Siguranta index.json: lista ar scadea de la {len(existing)} la "
+                f"{len(noua_lista)} intrari ({path}). Scriere anulata -- verifica manual."
+            )
+
+        data[key] = noua_lista
+        with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
     intrare = {
