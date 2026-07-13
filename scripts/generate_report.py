@@ -563,4 +563,37 @@ def main():
 
     print("2/5 Continut sursa (RO) - calendar saptamana...")
     cal_ro = parseaza_calendar(apeleaza_claude(prompt_calendar_saptamana()))
-   
+    print(f"    {len(cal_ro)} evenimente")
+
+    print("3/5 Continut sursa (RO) - analiza per instrument...")
+    factori_ro, smc_ro = {}, {}
+    for instr in INSTRUMENTE:
+        print(f"    {instr['simbol']}...")
+        factori_ro[instr["simbol"]] = parseaza(apeleaza_claude(prompt_factori(instr)), SECTIUNI_FACTORI)
+        smc_ro[instr["simbol"]] = parseaza(apeleaza_claude(prompt_smc(instr)), SECTIUNI_SMC)
+
+    continut_per_limba = {"ro": (ctx_ro, cal_ro, factori_ro, smc_ro)}
+
+    print("4/5 Traducere continut in celelalte limbi...")
+    for lang in LANGS:
+        if lang == "ro":
+            continue
+        try:
+            print(f"    -> {lang}...")
+            continut_per_limba[lang] = traduce_pachet(ctx_ro, cal_ro, factori_ro, smc_ro, lang)
+        except Exception as e:
+            print(f"    EROARE traducere {lang}: {e} -- folosesc continutul RO ca rezerva")
+            continut_per_limba[lang] = (ctx_ro, cal_ro, factori_ro, smc_ro)
+
+    print("5/5 Construire PDF-uri + index...")
+    fisiere_per_limba = {}
+    for lang in LANGS:
+        ctx, cal, factori, smc = continut_per_limba[lang]
+        _, fname = construieste_pdf(lang, ctx, cal, factori, smc)
+        fisiere_per_limba[lang] = fname
+    actualizeaza_index(fisiere_per_limba)
+
+    print(f"=== Finalizat: {len(fisiere_per_limba)} rapoarte generate ===")
+
+if __name__ == "__main__":
+    main()
