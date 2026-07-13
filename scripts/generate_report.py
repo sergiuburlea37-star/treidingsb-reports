@@ -15,6 +15,31 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+# Font Unicode (DejaVu Sans) inregistrat explicit -- fonturile de baza
+# Helvetica/Helvetica-Bold/Helvetica-Oblique din ReportLab NU au glife
+# pentru diacriticele romanesti (a-breve, s-comma, t-comma) si nici pentru
+# chirilic (RU/UK) sau diacriticele poloneze, motiv pentru care apareau
+# patrate negre in PDF. DejaVu Sans acopera Latin Extended + Chirilic,
+# deci rezolva toate cele 5 limbi dintr-o singura schimbare.
+FONT_DIR = Path(__file__).parent.parent / "assets" / "fonts"
+FONT_REGULAR      = "Helvetica"
+FONT_BOLD         = "Helvetica-Bold"
+FONT_OBLIQUE      = "Helvetica-Oblique"
+FONT_BOLDOBLIQUE  = "Helvetica-BoldOblique"
+try:
+    pdfmetrics.registerFont(TTFont("DejaVuSans", str(FONT_DIR / "DejaVuSans.ttf")))
+    pdfmetrics.registerFont(TTFont("DejaVuSans-Bold", str(FONT_DIR / "DejaVuSans-Bold.ttf")))
+    pdfmetrics.registerFont(TTFont("DejaVuSans-Oblique", str(FONT_DIR / "DejaVuSans-Oblique.ttf")))
+    pdfmetrics.registerFont(TTFont("DejaVuSans-BoldOblique", str(FONT_DIR / "DejaVuSans-BoldOblique.ttf")))
+    FONT_REGULAR     = "DejaVuSans"
+    FONT_BOLD        = "DejaVuSans-Bold"
+    FONT_OBLIQUE     = "DejaVuSans-Oblique"
+    FONT_BOLDOBLIQUE = "DejaVuSans-BoldOblique"
+except Exception as e:
+    print(f"AVERTISMENT: nu am putut incarca fontul DejaVu Sans ({e}) -- revin la Helvetica (diacriticele pot aparea gresit).")
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 if not ANTHROPIC_API_KEY:
@@ -205,20 +230,20 @@ LABELS = {
 def stiluri():
     base = getSampleStyleSheet()
     return {
-        "TitluRaport": ParagraphStyle("TitluRaport", parent=base["Title"], fontName="Helvetica-Bold", fontSize=19, textColor=C_NAVY, spaceAfter=4, alignment=TA_LEFT, leftIndent=LOGO_INDENT),
-        "SubtitluRaport": ParagraphStyle("SubtitluRaport", parent=base["Normal"], fontName="Helvetica", fontSize=9.5, textColor=C_GRI, spaceAfter=14, leftIndent=LOGO_INDENT),
-        "SectiuneMare": ParagraphStyle("SectiuneMare", parent=base["Heading1"], fontName="Helvetica-Bold", fontSize=12, textColor=C_NAVY, spaceBefore=6, spaceAfter=8, letterSpacing=0.6),
-        "InstrumentTitlu": ParagraphStyle("InstrumentTitlu", parent=base["Heading1"], fontName="Helvetica-Bold", fontSize=14, textColor=C_NAVY, spaceBefore=4, spaceAfter=2),
-        "InstrumentSub": ParagraphStyle("InstrumentSub", parent=base["Normal"], fontName="Helvetica-Oblique", fontSize=9, textColor=C_GRI, spaceAfter=8),
-        "SectiuneTitlu": ParagraphStyle("SectiuneTitlu", parent=base["Heading2"], fontName="Helvetica-Bold", fontSize=9.5, textColor=C_BLUE, spaceBefore=8, spaceAfter=3, letterSpacing=0.4),
-        "SectiuneText": ParagraphStyle("SectiuneText", parent=base["Normal"], fontName="Helvetica", fontSize=9.5, textColor=C_TEXT, leading=14, alignment=TA_JUSTIFY, spaceAfter=4),
-        "TabelLabel": ParagraphStyle("TabelLabel", parent=base["Normal"], fontName="Helvetica-Bold", fontSize=9, textColor=C_NAVY, leading=12),
-        "TabelText": ParagraphStyle("TabelText", parent=base["Normal"], fontName="Helvetica", fontSize=8.5, textColor=C_TEXT, leading=12),
-        "NotitaViolet": ParagraphStyle("NotitaViolet", parent=base["Normal"], fontName="Helvetica-Oblique", fontSize=9, textColor=HexColor("#6D28D9"), leading=13),
-        "NotitaGalben": ParagraphStyle("NotitaGalben", parent=base["Normal"], fontName="Helvetica-Oblique", fontSize=9, textColor=HexColor("#92400E"), leading=13),
-        "PretCurent": ParagraphStyle("PretCurent", parent=base["Normal"], fontName="Helvetica-Bold", fontSize=10, textColor=C_VERDE, leading=13),
-        "Disclaimer": ParagraphStyle("Disclaimer", parent=base["Normal"], fontName="Helvetica", fontSize=7.5, textColor=C_GRI, leading=11),
-        "Footer": ParagraphStyle("Footer", parent=base["Normal"], fontName="Helvetica", fontSize=8, textColor=C_GRI),
+        "TitluRaport": ParagraphStyle("TitluRaport", parent=base["Title"], fontName=FONT_BOLD, fontSize=19, textColor=C_NAVY, spaceAfter=4, alignment=TA_LEFT, leftIndent=LOGO_INDENT),
+        "SubtitluRaport": ParagraphStyle("SubtitluRaport", parent=base["Normal"], fontName=FONT_REGULAR, fontSize=9.5, textColor=C_GRI, spaceAfter=14, leftIndent=LOGO_INDENT),
+        "SectiuneMare": ParagraphStyle("SectiuneMare", parent=base["Heading1"], fontName=FONT_BOLD, fontSize=12, textColor=C_NAVY, spaceBefore=6, spaceAfter=8, letterSpacing=0.6),
+        "InstrumentTitlu": ParagraphStyle("InstrumentTitlu", parent=base["Heading1"], fontName=FONT_BOLD, fontSize=14, textColor=C_NAVY, spaceBefore=4, spaceAfter=2),
+        "InstrumentSub": ParagraphStyle("InstrumentSub", parent=base["Normal"], fontName=FONT_OBLIQUE, fontSize=9, textColor=C_GRI, spaceAfter=8),
+        "SectiuneTitlu": ParagraphStyle("SectiuneTitlu", parent=base["Heading2"], fontName=FONT_BOLD, fontSize=9.5, textColor=C_BLUE, spaceBefore=8, spaceAfter=3, letterSpacing=0.4),
+        "SectiuneText": ParagraphStyle("SectiuneText", parent=base["Normal"], fontName=FONT_REGULAR, fontSize=9.5, textColor=C_TEXT, leading=14, alignment=TA_JUSTIFY, spaceAfter=4),
+        "TabelLabel": ParagraphStyle("TabelLabel", parent=base["Normal"], fontName=FONT_BOLD, fontSize=9, textColor=C_NAVY, leading=12),
+        "TabelText": ParagraphStyle("TabelText", parent=base["Normal"], fontName=FONT_REGULAR, fontSize=8.5, textColor=C_TEXT, leading=12),
+        "NotitaViolet": ParagraphStyle("NotitaViolet", parent=base["Normal"], fontName=FONT_OBLIQUE, fontSize=9, textColor=HexColor("#6D28D9"), leading=13),
+        "NotitaGalben": ParagraphStyle("NotitaGalben", parent=base["Normal"], fontName=FONT_OBLIQUE, fontSize=9, textColor=HexColor("#92400E"), leading=13),
+        "PretCurent": ParagraphStyle("PretCurent", parent=base["Normal"], fontName=FONT_BOLD, fontSize=10, textColor=C_VERDE, leading=13),
+        "Disclaimer": ParagraphStyle("Disclaimer", parent=base["Normal"], fontName=FONT_REGULAR, fontSize=7.5, textColor=C_GRI, leading=11),
+        "Footer": ParagraphStyle("Footer", parent=base["Normal"], fontName=FONT_REGULAR, fontSize=8, textColor=C_GRI),
     }
 
 def apeleaza_claude(prompt, max_tokens=1800):
@@ -538,37 +563,4 @@ def main():
 
     print("2/5 Continut sursa (RO) - calendar saptamana...")
     cal_ro = parseaza_calendar(apeleaza_claude(prompt_calendar_saptamana()))
-    print(f"    {len(cal_ro)} evenimente")
-
-    print("3/5 Continut sursa (RO) - analiza per instrument...")
-    factori_ro, smc_ro = {}, {}
-    for instr in INSTRUMENTE:
-        print(f"    {instr['simbol']}...")
-        factori_ro[instr["simbol"]] = parseaza(apeleaza_claude(prompt_factori(instr)), SECTIUNI_FACTORI)
-        smc_ro[instr["simbol"]] = parseaza(apeleaza_claude(prompt_smc(instr)), SECTIUNI_SMC)
-
-    continut_per_limba = {"ro": (ctx_ro, cal_ro, factori_ro, smc_ro)}
-
-    print("4/5 Traducere continut in celelalte limbi...")
-    for lang in LANGS:
-        if lang == "ro":
-            continue
-        try:
-            print(f"    -> {lang}...")
-            continut_per_limba[lang] = traduce_pachet(ctx_ro, cal_ro, factori_ro, smc_ro, lang)
-        except Exception as e:
-            print(f"    EROARE traducere {lang}: {e} -- folosesc continutul RO ca rezerva")
-            continut_per_limba[lang] = (ctx_ro, cal_ro, factori_ro, smc_ro)
-
-    print("5/5 Construire PDF-uri + index...")
-    fisiere_per_limba = {}
-    for lang in LANGS:
-        ctx, cal, factori, smc = continut_per_limba[lang]
-        _, fname = construieste_pdf(lang, ctx, cal, factori, smc)
-        fisiere_per_limba[lang] = fname
-    actualizeaza_index(fisiere_per_limba)
-
-    print(f"=== Finalizat: {len(fisiere_per_limba)} rapoarte generate ===")
-
-if __name__ == "__main__":
-    main()
+   
