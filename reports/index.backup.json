@@ -1,38 +1,6 @@
 {
   "rapoarte": [
     {
-      "data": "2026-07-13",
-      "data_afisare": "13 Iulie 2026",
-      "data_urmatoare": "20 Iulie 2026",
-      "saptamana": 29,
-      "quarter": "Q3",
-      "year": 2026,
-      "fisiere": {
-        "ro": "Q3_2026/raport-2026-07-13-ro.pdf",
-        "en": "Q3_2026/raport-2026-07-13-en.pdf",
-        "ru": "Q3_2026/raport-2026-07-13-ru.pdf",
-        "uk": "Q3_2026/raport-2026-07-13-uk.pdf",
-        "pl": "Q3_2026/raport-2026-07-13-pl.pdf"
-      },
-      "instrumente": [
-        "XAU/USD",
-        "XAG/USD",
-        "EUR/USD",
-        "GBP/USD"
-      ],
-      "preturi": {
-        "EURUSD": "1.1426",
-        "GBPUSD": "1.3264",
-        "XAUUSD": "4,018.89",
-        "XAGUSD": "59.2275",
-        "DXY": "101.14",
-        "FED": "3.75%",
-        "BCE": "2.40%",
-        "BOE": "3.75%",
-        "US10Y": "4.452%"
-      }
-    },
-    {
       "data": "2026-07-06",
       "data_afisare": "06 Iulie 2026",
       "data_urmatoare": "13 Iulie 2026",
